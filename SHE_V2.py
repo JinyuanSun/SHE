@@ -1,9 +1,9 @@
 import itertools
 import os
 import sys
+
 import Bio
 import numpy as np
-from Bio.PDB import *
 
 from PeptideBuilder import *
 
@@ -86,7 +86,7 @@ def GLU_backbone_dic():
         try:
             psi_phi = (int(lst[1]), int(lst[2]))
             pob = float(lst[8])
-            if pob > 0.001:
+            if pob > 0.0001:
                 key = (psi_phi, pob)
                 rot_list = [float(lst[9]), float(lst[10]), float(lst[11])]
                 GLU_lib_dic[key] = rot_list
@@ -106,7 +106,7 @@ def HIS_backbone_dic():
         try:
             psi_phi = (int(lst[1]), int(lst[2]))
             pob = float(lst[8])
-            if pob > 0.001:
+            if pob > 0.0001:
                 key = (psi_phi, pob)
                 rot_list = [float(lst[9]), float(lst[10])]
                 HIS_lib_dic[key] = rot_list
@@ -126,7 +126,7 @@ def SER_backbone_dic():
         try:
             psi_phi = (int(lst[1]), int(lst[2]))
             pob = float(lst[8])
-            if pob > 0.001:
+            if pob > 0.0001:
                 key = (psi_phi, pob)
                 rot_list = [float(lst[9])]
                 SER_lib_dic[key] = rot_list
@@ -137,17 +137,6 @@ def SER_backbone_dic():
 
     return SER_lib_dic
 
-
-# print(chain[1])
-
-
-
-
-#position = 2
-
-
-# sub_dic = backbone_sub_dic(2)
-# print(sub_dic)
 
 def backbone_sub_dic(position, lib_dic):
     sub_dic = {}
@@ -164,15 +153,12 @@ def backbone_sub_dic(position, lib_dic):
     return sub_dic, phi, psi_im1
 
 
-def mut(position, mut_AA, atom_name):
+def mut(position, mut_AA):
     res = res_list[position - 1]
-    out_lst = []
     out_P_S_lst = []
-    out_structure_lst = []
     ca = res["CA"]
     C = res["C"]
     N = res["N"]
-    ca_coor = ca.get_coord()
     CA_coord = ca.get_coord()
     C_coord = C.get_coord()
     N_coord = N.get_coord()
@@ -200,64 +186,15 @@ def mut(position, mut_AA, atom_name):
         geo.psi_im1 = psi_im1
         geo.inputRotamers(rot)
         structure = PeptideBuilder.initialize_res(geo, CA_coord, C_coord, N_coord)
-        # differs
-        if mut_AA == "SER":
-            OG = structure[0]['A'][1]['OG']
-            out_lst.append(OG)
-
-            for atom in structure.get_atoms():
-                atom = atom.set_coord(atom.get_coord())
-                out = Bio.PDB.PDBIO()
-            out.set_structure(structure)
-            out_structure_lst.append(out)
-            out_P_S_lst.append((OG, out,structure))
-
-        if mut_AA == "HIS":
-            NE2 = structure[0]['A'][1]['NE2']
-            NE2.set_coord(NE2.get_coord())
-            ND1 = structure[0]['A'][1]['ND1']
-            ND1.set_coord(ND1.get_coord())
-            CG = structure[0]['A'][1]['CG']
-            CG.set_coord(CG.get_coord())
-            if atom_name == "NE2":
-                out_lst.append(NE2)
-                for atom in structure.get_atoms():
-                    atom = atom.set_coord(atom.get_coord())
-                    out = Bio.PDB.PDBIO()
-                out.set_structure(structure)
-                out_P_S_lst.append((NE2, out,structure))
-            if atom_name == "ND1":
-                out_lst.append(ND1)
-                for atom in structure.get_atoms():
-                    atom = atom.set_coord(atom.get_coord())
-                    out = Bio.PDB.PDBIO()
-                out.set_structure(structure)
-                out_P_S_lst.append((ND1, out,structure))
-            if atom_name == "CG":
-                out_lst.append(ND1)
-                for atom in structure.get_atoms():
-                    atom = atom.set_coord(atom.get_coord())
-                    out = Bio.PDB.PDBIO()
-                out.set_structure(structure)
-                out_P_S_lst.append((CG, out,structure))
-
-        if mut_AA == "GLU":
-            OE1 = structure[0]['A'][1]['OE1']
-            OE1.set_coord(OE1.get_coord())
-            out_lst.append(OE1)
-
-            for atom in structure.get_atoms():
-                atom = atom.set_coord(atom.get_coord())
-                out = Bio.PDB.PDBIO()
-            out.set_structure(structure)
-            out_P_S_lst.append((OE1, out,structure))
-
+        out = Bio.PDB.PDBIO()
+        out.set_structure(structure)
+        out_P_S_lst.append((out,structure))
     return out_P_S_lst
 
 
 # print(mut(2,"SER","OG"))
-
-def _match(SER, HIS, GLU, min, max):
+'''
+def _match(SER, HIS, GLU, k):
     OG_CG = 5.3157005
     OE1_CG = 3.6736708
     OG_OE1 = 7.308651
@@ -301,67 +238,157 @@ def _match(SER, HIS, GLU, min, max):
                                         angle2 = calc_angle(vector1, vector4, vector3)
                                         #print(angle2)
                                         if 2.5 < angle2 < 3.0:
-                                            SER_out_name = "SER" +"_"+ str(SER)+"_" + str(ab)[:3] + "_"
-                                            HIS_out_name = "HIS" +"_"+ str(HIS)+"_" + str(ac)[:3] + "_"
-                                            GLU_out_name = "GLU" +"_"+ str(GLU)+"_" + str(bc)[:3] + "_"
-                                            SER_out.save(SER_out_name)
-                                            HIS_out.save(HIS_out_name)
-                                            GLU_out.save(GLU_out_name)
-                                            #print("SER,HIS,GLU", ab, ac, bc)
-                                            #new_lst.append(("SER",SER,"HIS",HIS,"GLU",GLU))
-                                            os.system("cat " + pdb_filename + " " + SER_out_name + " " + HIS_out_name +
-                                                      " " + GLU_out_name + " > " + pdb_filename.replace(".pdb", "_") +
-                                                      SER_out_name + HIS_out_name + GLU_out_name + ".pdb")
+                                            GLU_OE2 = GLU_structure[0]["A"][1]["OE2"]
+                                            OE2_ND1 = GLU_OE2 - HIS_ND1
+                                            if OE2_ND1-1.5 > OE1_ND1:
+                                                SER_out_name = "SER" +"_"+ str(SER)+"_" + str(ab)[:3] + "_"
+                                                HIS_out_name = "HIS" +"_"+ str(HIS)+"_" + str(ac)[:3] + "_"
+                                                GLU_out_name = "GLU" +"_"+ str(GLU)+"_" + str(bc)[:3] + "_"
+                                                SER_out.save(SER_out_name)
+                                                HIS_out.save(HIS_out_name)
+                                                GLU_out.save(GLU_out_name)
+                                                #print("SER,HIS,GLU", ab, ac, bc)
+                                                #new_lst.append(("SER",SER,"HIS",HIS,"GLU",GLU))
+                                                os.system("cat " + pdb_filename + " " + SER_out_name + " " + HIS_out_name +
+                                                          " " + GLU_out_name + " > " + pdb_filename.replace(".pdb", "_") +
+                                                          SER_out_name + HIS_out_name + GLU_out_name + ".pdb")
         #print(new_lst)
     except TypeError:
         print("warning")
+'''
+k = 0.3
+
+
+def SER_HIS_GLU_pair(pSER, pHIS, pGLU,k):
+    try:
+        n = 0
+        SER_HIS_GLU_lst = []
+        sSER = mut(pSER, "SER")
+        sHIS = mut(pHIS, "HIS")
+        sGLU = mut(pGLU, "GLU")
+        # get atoms
+        for SER in sSER:
+            OG = SER[1][0]["A"][1]["OG"]
+            OG_v = OG.get_vector()
+            SER_out = SER[0]
+            for HIS in sHIS:
+                HIS_out = HIS[0]
+                NE2 = HIS[1][0]["A"][1]["NE2"]
+                NE2_v = NE2.get_vector()
+                OG_NE2 = OG - NE2
+                if abs(1 - OG_NE2 / 3.1) < k:
+                    #print(OG_NE2)
+                    CB = SER[1][0]["A"][1]["CB"]
+                    CB_v = CB.get_vector()
+                    OG_CB_NE2 = calc_angle(OG_v, CB_v, NE2_v)
+                    if abs(1 - 57.3 * OG_CB_NE2/76.7) < k:
+                        #print(OG_CB_NE2)
+                        CE1 = HIS[1][0]["A"][1]["CE1"]
+                        CE1_v = CE1.get_vector()
+                        ND1 = HIS[1][0]["A"][1]["ND1"]
+                        ND1_v = ND1.get_vector()
+                        CB_NE2_CE1 = calc_angle(CB_v, NE2_v, CE1_v)
+                        OG_CB_NE2_CE1 = calc_dihedral(OG_v, CB_v, NE2_v, CE1_v)
+                        CB_NE2_CE1_ND1 = calc_dihedral(CB_v, NE2_v, CE1_v, ND1_v)
+                        if abs(1 - 57.3 * CB_NE2_CE1/102.5) < k and abs(1 - 57.3 * OG_CB_NE2_CE1/104.1) < k and abs(
+                                1 - 57.3 * CB_NE2_CE1_ND1/151.1) < k:
+                            #print(CB_NE2_CE1)
+                            for GLU in sGLU:
+                                GLU_out = GLU[0]
+                                OE1 = GLU[1][0]["A"][1]["OE1"]
+                                OE1_v = OE1.get_vector()
+                                OE1_ND1 = OE1 - ND1
+                                CE1_ND1_OE1 = calc_angle(CE1_v, ND1_v, OE1_v)
+                                NE2_CE1_ND1_OE1 = calc_dihedral(NE2_v, CE1_v, ND1_v, OE1_v)
+                                if abs(1 - OE1_ND1 / 2.7) < k and abs(1 - 57.3 * CE1_ND1_OE1/126.8) < k and abs(
+                                        1 - 57.3 * NE2_CE1_ND1_OE1/-173.3) < k:
+                                    #print(1,OE1_ND1)
+                                    CD = GLU[1][0]["A"][1]["CD"]
+                                    CD_v = CD.get_vector()
+                                    OE2 = GLU[1][0]["A"][1]["OE2"]
+                                    OE2_v = OE2.get_vector()
+                                    CE1_ND1_OE1_CD = calc_dihedral(CE1_v, ND1_v, OE1_v, CD_v)
+                                    ND1_OE1_CD_OE2 = calc_dihedral(ND1_v, OE1_v, CD_v, OE2_v)
+                                    if abs(1 - 57.3 * CE1_ND1_OE1_CD/49.3) < k :
+                                        #print(57.3 * CE1_ND1_OE1_CD)
+                                        n = n + 1
+                                        SER_out_name = "SER" + "_" + str(pSER)
+                                        HIS_out_name = "HIS" + "_" + str(pHIS)
+                                        GLU_out_name = "GLU" + "_" + str(pGLU)
+                                        SER_out.save(SER_out_name + "_"+ str(n))
+                                        HIS_out.save(HIS_out_name + "_"+ str(n))
+                                        GLU_out.save(GLU_out_name + "_"+ str(n))
+                                        # print("SER,HIS,GLU", ab, ac, bc)
+                                        # new_lst.append(("SER",SER,"HIS",HIS,"GLU",GLU))
+                                        os.system("cat " + pdb_filename + " " + SER_out_name + " " + HIS_out_name +
+                                                  " " + GLU_out_name + " > " + pdb_filename.replace(".pdb", "_") +
+                                                  SER_out_name + HIS_out_name + GLU_out_name +str(n)+ ".pdb")
+                                        SER_HIS_GLU_lst.append(SER_out_name + HIS_out_name + GLU_out_name+","+str(n))
+    except TypeError:
+        print(pSER, pHIS, pGLU)
+
+    return SER_HIS_GLU_lst
+
+
+
+
+
+
+    #condition:
+
+
+
 
 def _run(pairs):
     res_cob_list = list(itertools.combinations(pairs, 3))
-    new_lst = []
-    low = 0.90
-    high = 1.10
-
+    pairs_out_lst = []
     for x in res_cob_list:
         CA1 = atom_list[x[1] - 1]
         CA2 = atom_list[x[2] - 1]
         d = CA1 - CA2
             # print(d)
         if 3 < d < 10:
-            SER = x[0]
-            HIS = x[1]
-            GLU = x[2]
-            _match(SER, HIS, GLU, low, high)
+            pSER = x[0]
+            pHIS = x[1]
+            pGLU = x[2]
+            SER_HIS_GLU_lst = SER_HIS_GLU_pair(pSER, pHIS, pGLU,k)
+            pairs_out_lst.append(SER_HIS_GLU_lst)
 
-            SER = x[0]
-            HIS = x[2]
-            GLU = x[1]
+            pSER = x[0]
+            pHIS = x[2]
+            pGLU = x[1]
 
-            _match(SER, HIS, GLU, low, high)
+            SER_HIS_GLU_lst = SER_HIS_GLU_pair(pSER, pHIS, pGLU,k)
+            pairs_out_lst.append(SER_HIS_GLU_lst)
 
-            SER = x[1]
-            HIS = x[2]
-            GLU = x[0]
+            pSER = x[1]
+            pHIS = x[2]
+            pGLU = x[0]
 
-            _match(SER, HIS, GLU, low, high)
+            SER_HIS_GLU_lst = SER_HIS_GLU_pair(pSER, pHIS, pGLU,k)
+            pairs_out_lst.append(SER_HIS_GLU_lst)
 
-            SER = x[1]
-            HIS = x[0]
-            GLU = x[2]
+            pSER = x[1]
+            pHIS = x[0]
+            pGLU = x[2]
 
-            _match(SER, HIS, GLU, low, high)
+            SER_HIS_GLU_lst = SER_HIS_GLU_pair(pSER, pHIS, pGLU,k)
+            pairs_out_lst.append(SER_HIS_GLU_lst)
 
-            SER = x[2]
-            HIS = x[1]
-            GLU = x[0]
+            pSER = x[2]
+            pHIS = x[1]
+            pGLU = x[0]
 
-            _match(SER, HIS, GLU, low, high)
+            SER_HIS_GLU_lst = SER_HIS_GLU_pair(pSER, pHIS, pGLU,k)
+            pairs_out_lst.append(SER_HIS_GLU_lst)
 
-            SER = x[2]
-            HIS = x[0]
-            GLU = x[1]
+            pSER = x[2]
+            pHIS = x[0]
+            pGLU = x[1]
 
-            _match(SER, HIS, GLU, low, high)
+            SER_HIS_GLU_lst = SER_HIS_GLU_pair(pSER, pHIS, pGLU,k)
+            pairs_out_lst.append(SER_HIS_GLU_lst)
+    return pairs_out_lst
 # scan_lst = ["SER_OG","HIS_NE2","HIS_ND1","GLU_OE1"]
 # constraint:
 # S102_OG_H242_NE2 = 3.1190376
@@ -433,14 +460,14 @@ try:
         #test = (102,242,126)
 
         for xlst in pair_dict:
-            _run(pair_dict[xlst])
+            #pair_dict[xlst]
+            ofile = open(pdb_filename+"SHE.out","a+")
+            pairs_out_lst = _run(pair_dict[xlst])
+            for outs in pairs_out_lst:
+                print(outs,file=ofile)
+
 
 except IndexError:
     print("Error, not enough arguments!\nUsage:python3 SHE.py you_pdbfile\n\n\ne.g.: python3 SHE.py 3wzl.pdb\n\n"
           "Before the first trail, you may like to run python3 SHE.py demo, this is fast and can let you know what "
           "is the outcome looks like.\n\nPlease notice that prefrom a complete scan will take hours on a 4 GHz CPU!")
-
-# input
-
-
-
