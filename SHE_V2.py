@@ -192,70 +192,7 @@ def mut(position, mut_AA):
     return out_P_S_lst
 
 
-# print(mut(2,"SER","OG"))
-'''
-def _match(SER, HIS, GLU, k):
-    OG_CG = 5.3157005
-    OE1_CG = 3.6736708
-    OG_OE1 = 7.308651
-    try:
-        SER_OG = mut(SER, "SER", "OG")
-        #HIS_NE2 = mut(HIS, "HIS", "NE2")
-        #HIS_ND1 = mut(HIS, "HIS", "ND1")
-        GLU_OE1 = mut(GLU, "GLU", "OG1")
-        HIS_CG = mut(HIS, "HIS", "CG")
-        for x in SER_OG:
-            a = x[0] #OG
-            SER_out = x[1]
-            for y in HIS_CG:
-                b = y[0] #CG
-                ab = a - b
-                HIS_out = y[1]
-                HIS_structure = y[2]
-                if min < ab / OG_CG < max:
-                    for z in GLU_OE1:
-                        c = z[0] #OE1
-                        bc = b - c
-                        GLU_out = z[1]
-                        GLU_structure = z[2]
-                        if min < bc / OE1_CG < max:
-                            ac = c - a
-                            if min < ac / OG_OE1 < max:
-                                vector1 = a.get_vector() #OG_vector
-                                vector2 = b.get_vector()
-                                vector3 = c.get_vector() #OE1_vector
-                                angle = calc_angle(vector1, vector2, vector3)
-                                HIS_NE2 = HIS_structure[0]["A"][1]["NE2"]
-                                HIS_ND1 = HIS_structure[0]["A"][1]["ND1"]
-                                HIS_CE1 = HIS_structure[0]["A"][1]["CE1"]
-                                OG_NE2 = a - HIS_NE2
-                                #print(OG_NE2)
-                                OE1_ND1 = c - HIS_ND1
-                                if 0.6 < OG_NE2/3.1 < 1.4 and 0.6 < OE1_ND1/2.7 < 1.4:
-                                    #new_lst.append(x)
-                                    if 0.9 < angle/1.8740658432419748 < 1.1:
-                                        vector4 = HIS_CE1.get_vector()
-                                        angle2 = calc_angle(vector1, vector4, vector3)
-                                        #print(angle2)
-                                        if 2.5 < angle2 < 3.0:
-                                            GLU_OE2 = GLU_structure[0]["A"][1]["OE2"]
-                                            OE2_ND1 = GLU_OE2 - HIS_ND1
-                                            if OE2_ND1-1.5 > OE1_ND1:
-                                                SER_out_name = "SER" +"_"+ str(SER)+"_" + str(ab)[:3] + "_"
-                                                HIS_out_name = "HIS" +"_"+ str(HIS)+"_" + str(ac)[:3] + "_"
-                                                GLU_out_name = "GLU" +"_"+ str(GLU)+"_" + str(bc)[:3] + "_"
-                                                SER_out.save(SER_out_name)
-                                                HIS_out.save(HIS_out_name)
-                                                GLU_out.save(GLU_out_name)
-                                                #print("SER,HIS,GLU", ab, ac, bc)
-                                                #new_lst.append(("SER",SER,"HIS",HIS,"GLU",GLU))
-                                                os.system("cat " + pdb_filename + " " + SER_out_name + " " + HIS_out_name +
-                                                          " " + GLU_out_name + " > " + pdb_filename.replace(".pdb", "_") +
-                                                          SER_out_name + HIS_out_name + GLU_out_name + ".pdb")
-        #print(new_lst)
-    except TypeError:
-        print("warning")
-'''
+
 k = 0.3
 
 
