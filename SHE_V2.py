@@ -1,12 +1,11 @@
 import itertools
 import os
 import sys
-
 import Bio
 import numpy as np
-
+import time
 from PeptideBuilder import *
-
+start = time.time()
 
 def _3_2_1(x):
     d = {'CYS': 'C', 'ASP': 'D', 'SER': 'S', 'GLN': 'Q', 'LYS': 'K',
@@ -188,18 +187,19 @@ def mut(position, mut_AA):
         structure = PeptideBuilder.initialize_res(geo, CA_coord, C_coord, N_coord)
         out = Bio.PDB.PDBIO()
         out.set_structure(structure)
-        out_P_S_lst.append((out,structure))
+        out_P_S_lst.append((out, structure))
     return out_P_S_lst
 
 
+# print(mut(2,"SER","OG"))
 
 k = 0.3
 
 
-def SER_HIS_GLU_pair(pSER, pHIS, pGLU,k):
+def SER_HIS_GLU_pair(pSER, pHIS, pGLU, k):
     try:
         n = 0
-        SER_HIS_GLU_lst = []
+        SER_HIS_GLU_dict = {}
         sSER = mut(pSER, "SER")
         sHIS = mut(pHIS, "HIS")
         sGLU = mut(pGLU, "GLU")
@@ -214,66 +214,67 @@ def SER_HIS_GLU_pair(pSER, pHIS, pGLU,k):
                 NE2_v = NE2.get_vector()
                 OG_NE2 = OG - NE2
                 if abs(1 - OG_NE2 / 3.1) < k:
-                    #print(OG_NE2)
+                    # print(OG_NE2)
                     CB = SER[1][0]["A"][1]["CB"]
                     CB_v = CB.get_vector()
                     OG_CB_NE2 = calc_angle(OG_v, CB_v, NE2_v)
-                    if abs(1 - 57.3 * OG_CB_NE2/76.7) < k:
-                        #print(OG_CB_NE2)
+                    if abs(1 - 57.3 * OG_CB_NE2 / 76.7) < k:
+                        # print(OG_CB_NE2)
                         CE1 = HIS[1][0]["A"][1]["CE1"]
                         CE1_v = CE1.get_vector()
                         ND1 = HIS[1][0]["A"][1]["ND1"]
                         ND1_v = ND1.get_vector()
                         CB_NE2_CE1 = calc_angle(CB_v, NE2_v, CE1_v)
-                        OG_CB_NE2_CE1 = calc_dihedral(OG_v, CB_v, NE2_v, CE1_v)
-                        CB_NE2_CE1_ND1 = calc_dihedral(CB_v, NE2_v, CE1_v, ND1_v)
-                        if abs(1 - 57.3 * CB_NE2_CE1/102.5) < k and abs(1 - 57.3 * OG_CB_NE2_CE1/104.1) < k and abs(
-                                1 - 57.3 * CB_NE2_CE1_ND1/151.1) < k:
-                            #print(CB_NE2_CE1)
-                            for GLU in sGLU:
-                                GLU_out = GLU[0]
-                                OE1 = GLU[1][0]["A"][1]["OE1"]
-                                OE1_v = OE1.get_vector()
-                                OE1_ND1 = OE1 - ND1
-                                CE1_ND1_OE1 = calc_angle(CE1_v, ND1_v, OE1_v)
-                                NE2_CE1_ND1_OE1 = calc_dihedral(NE2_v, CE1_v, ND1_v, OE1_v)
-                                if abs(1 - OE1_ND1 / 2.7) < k and abs(1 - 57.3 * CE1_ND1_OE1/126.8) < k and abs(
-                                        1 - 57.3 * NE2_CE1_ND1_OE1/-173.3) < k:
-                                    #print(1,OE1_ND1)
-                                    CD = GLU[1][0]["A"][1]["CD"]
-                                    CD_v = CD.get_vector()
-                                    OE2 = GLU[1][0]["A"][1]["OE2"]
-                                    OE2_v = OE2.get_vector()
-                                    CE1_ND1_OE1_CD = calc_dihedral(CE1_v, ND1_v, OE1_v, CD_v)
-                                    ND1_OE1_CD_OE2 = calc_dihedral(ND1_v, OE1_v, CD_v, OE2_v)
-                                    if abs(1 - 57.3 * CE1_ND1_OE1_CD/49.3) < k :
-                                        #print(57.3 * CE1_ND1_OE1_CD)
-                                        n = n + 1
-                                        SER_out_name = "SER" + "_" + str(pSER)
-                                        HIS_out_name = "HIS" + "_" + str(pHIS)
-                                        GLU_out_name = "GLU" + "_" + str(pGLU)
-                                        SER_out.save(SER_out_name + "_"+ str(n))
-                                        HIS_out.save(HIS_out_name + "_"+ str(n))
-                                        GLU_out.save(GLU_out_name + "_"+ str(n))
-                                        # print("SER,HIS,GLU", ab, ac, bc)
-                                        # new_lst.append(("SER",SER,"HIS",HIS,"GLU",GLU))
-                                        os.system("cat " + pdb_filename + " " + SER_out_name + " " + HIS_out_name +
-                                                  " " + GLU_out_name + " > " + pdb_filename.replace(".pdb", "_") +
-                                                  SER_out_name + HIS_out_name + GLU_out_name +str(n)+ ".pdb")
-                                        SER_HIS_GLU_lst.append(SER_out_name + HIS_out_name + GLU_out_name+","+str(n))
+                        if abs(1 - 57.3 * CB_NE2_CE1 / 102.5) < k:
+                            # OG_CB_NE2_CE1 = calc_dihedral(OG_v, CB_v, NE2_v, CE1_v)
+                            CB_NE2_CE1_ND1 = calc_dihedral(CB_v, NE2_v, CE1_v, ND1_v)
+                            if abs(1 - 57.3 * CB_NE2_CE1_ND1 / 151.1) < k:
+                                # print(CB_NE2_CE1)
+                                for GLU in sGLU:
+                                    GLU_out = GLU[0]
+                                    OE1 = GLU[1][0]["A"][1]["OE1"]
+                                    OE1_v = OE1.get_vector()
+                                    OE1_ND1 = OE1 - ND1
+                                    if abs(1 - OE1_ND1 / 2.7) < k:
+                                        CE1_ND1_OE1 = calc_angle(CE1_v, ND1_v, OE1_v)
+                                        if abs(1 - 57.3 * CE1_ND1_OE1 / 126.8) < k:
+                                            NE2_CE1_ND1_OE1 = calc_dihedral(NE2_v, CE1_v, ND1_v, OE1_v)
+                                            if abs(1 - 57.3 * NE2_CE1_ND1_OE1 / -173.3) < k:
+                                                # print(1,OE1_ND1)
+                                                CD = GLU[1][0]["A"][1]["CD"]
+                                                CD_v = CD.get_vector()
+                                                OE2 = GLU[1][0]["A"][1]["OE2"]
+                                                OE2_v = OE2.get_vector()
+                                                CE1_ND1_OE1_CD = calc_dihedral(CE1_v, ND1_v, OE1_v, CD_v)
+                                                if abs(1 - 57.3 * CE1_ND1_OE1_CD / 49.3) < k:
+                                                    # ND1_OE1_CD_OE2 = calc_dihedral(ND1_v, OE1_v, CD_v, OE2_v)
+                                                    OG_CE1_OE1 = calc_angle(OG_v, CE1_v, OE1_v)
+                                                    if abs(1 - 57.3 * OG_CE1_OE1 / 160) < k:
+                                                        # print(57.3 * CE1_ND1_OE1_CD)
+                                                        n = n + 1
+                                                        SER_out_name = "SER" + "_" + str(pSER)
+                                                        HIS_out_name = "HIS" + "_" + str(pHIS)
+                                                        GLU_out_name = "GLU" + "_" + str(pGLU)
+                                                        SER_out.save(SER_out_name + "_" + str(n))
+                                                        HIS_out.save(HIS_out_name + "_" + str(n))
+                                                        GLU_out.save(GLU_out_name + "_" + str(n))
+                                                        # print("SER,HIS,GLU", ab, ac, bc)
+                                                        # new_lst.append(("SER",SER,"HIS",HIS,"GLU",GLU))
+                                                        os.system(
+                                                            "cat " + pdb_filename + " " + SER_out_name + "_" + str(
+                                                                n) + " " + HIS_out_name + "_" + str(n) +
+                                                            " " + GLU_out_name + "_" + str(
+                                                                n) + " > " + pdb_filename.replace(".pdb", "_") +
+                                                            SER_out_name +"_"+ HIS_out_name +"_"+ GLU_out_name + "_" + str(
+                                                                n) + ".pdb")
+                                                        SER_HIS_GLU_dict[
+                                                            SER_out_name + "_" + HIS_out_name + "_" + GLU_out_name] = n
     except TypeError:
         print(pSER, pHIS, pGLU)
 
-    return SER_HIS_GLU_lst
+    return SER_HIS_GLU_dict
 
-
-
-
-
-
-    #condition:
-
-
+    # condition:
 
 
 def _run(pairs):
@@ -283,55 +284,57 @@ def _run(pairs):
         CA1 = atom_list[x[1] - 1]
         CA2 = atom_list[x[2] - 1]
         d = CA1 - CA2
-            # print(d)
+        # print(d)
         if 3 < d < 10:
             pSER = x[0]
             pHIS = x[1]
             pGLU = x[2]
-            SER_HIS_GLU_lst = SER_HIS_GLU_pair(pSER, pHIS, pGLU,k)
+            SER_HIS_GLU_lst = SER_HIS_GLU_pair(pSER, pHIS, pGLU, k)
             pairs_out_lst.append(SER_HIS_GLU_lst)
 
             pSER = x[0]
             pHIS = x[2]
             pGLU = x[1]
 
-            SER_HIS_GLU_lst = SER_HIS_GLU_pair(pSER, pHIS, pGLU,k)
+            SER_HIS_GLU_lst = SER_HIS_GLU_pair(pSER, pHIS, pGLU, k)
             pairs_out_lst.append(SER_HIS_GLU_lst)
 
             pSER = x[1]
             pHIS = x[2]
             pGLU = x[0]
 
-            SER_HIS_GLU_lst = SER_HIS_GLU_pair(pSER, pHIS, pGLU,k)
+            SER_HIS_GLU_lst = SER_HIS_GLU_pair(pSER, pHIS, pGLU, k)
             pairs_out_lst.append(SER_HIS_GLU_lst)
 
             pSER = x[1]
             pHIS = x[0]
             pGLU = x[2]
 
-            SER_HIS_GLU_lst = SER_HIS_GLU_pair(pSER, pHIS, pGLU,k)
+            SER_HIS_GLU_lst = SER_HIS_GLU_pair(pSER, pHIS, pGLU, k)
             pairs_out_lst.append(SER_HIS_GLU_lst)
 
             pSER = x[2]
             pHIS = x[1]
             pGLU = x[0]
 
-            SER_HIS_GLU_lst = SER_HIS_GLU_pair(pSER, pHIS, pGLU,k)
+            SER_HIS_GLU_lst = SER_HIS_GLU_pair(pSER, pHIS, pGLU, k)
             pairs_out_lst.append(SER_HIS_GLU_lst)
 
             pSER = x[2]
             pHIS = x[0]
             pGLU = x[1]
 
-            SER_HIS_GLU_lst = SER_HIS_GLU_pair(pSER, pHIS, pGLU,k)
+            SER_HIS_GLU_lst = SER_HIS_GLU_pair(pSER, pHIS, pGLU, k)
             pairs_out_lst.append(SER_HIS_GLU_lst)
     return pairs_out_lst
+
+
 # scan_lst = ["SER_OG","HIS_NE2","HIS_ND1","GLU_OE1"]
 # constraint:
 # S102_OG_H242_NE2 = 3.1190376
 # H242_ND1_E126_OE1 = 2.7223976
 # S102_OG_E126_OE1 = 7.308651
-#interface
+# interface
 if len(sys.argv) < 2:
     print("Error, not enough arguments!\nUsage:python3 SHE.py you_pdbfile\n\n\ne.g.: python3 SHE.py 3wzl.pdb\n\n"
           "Before the first trail, you may like to run python3 SHE.py demo, this is fast and can let you know what "
@@ -353,7 +356,6 @@ try:
                 atom_list.append(CA)
                 res_list.append(residue)
 
-
         pair_dict = _pair_map(atom_list, 3, 10)
 
         di_dic = _main_diangle_dict(res_list)
@@ -363,9 +365,14 @@ try:
         # print(SER_lib_dic) check
         HIS_lib_dic = HIS_backbone_dic()
         GLU_lib_dic = GLU_backbone_dic()
-        test = (102,242,126)
-    #for xlst in pair_dict:
-        _run(test)
+        test = (102, 242, 126)
+        # for xlst in pair_dict:
+        pairs_out_lst = _run(test)
+        for x in pairs_out_lst:
+            if x != {}:
+                print(x)
+        end = time.time()
+        print("This job took "+str(end-start)+" seconds!")
     if sys.argv[1] != "demo":
         pdb_filename = sys.argv[1]
         p = PDBParser(PERMISSIVE=1)
@@ -382,7 +389,6 @@ try:
                 atom_list.append(CA)
                 res_list.append(residue)
 
-
         pair_dict = _pair_map(atom_list, 3, 10)
 
         di_dic = _main_diangle_dict(res_list)
@@ -393,15 +399,18 @@ try:
         HIS_lib_dic = HIS_backbone_dic()
         GLU_lib_dic = GLU_backbone_dic()
 
-        #print(pair_dict[2])
-        #test = (102,242,126)
+        # print(pair_dict[2])
+        # test = (102,242,126)
 
         for xlst in pair_dict:
-            #pair_dict[xlst]
-            ofile = open(pdb_filename+"SHE.out","a+")
+            # pair_dict[xlst]
+            ofile = open(pdb_filename + "_SHE.out", "a+")
             pairs_out_lst = _run(pair_dict[xlst])
-            for outs in pairs_out_lst:
-                print(outs,file=ofile)
+            for x in pairs_out_lst:
+                if x != {}:
+                    print(x, file=ofile)
+        end = time.time()
+        print("This job took "+str(end-start)+" seconds!")
 
 
 except IndexError:
