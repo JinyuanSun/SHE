@@ -1,8 +1,9 @@
 import itertools
 import math
-import sys
 import os
+import sys
 import time
+
 from Bio.PDB import *
 from Bio.PDB.Atom import *
 from Bio.PDB.DSSP import DSSP
@@ -235,7 +236,7 @@ def GLU_backbone_dic():
         try:
             psi_phi = (lst[1] + "_" + lst[2])
             pob = float(lst[8])
-            if pob > 0.001:
+            if pob > 0.00001:
                 key = (psi_phi, pob)
                 rot_list = [float(lst[9]), float(lst[10]), float(lst[11])]
                 GLU_lib_dic[key] = rot_list
@@ -255,7 +256,7 @@ def HIS_backbone_dic():
         try:
             psi_phi = (lst[1] + "_" + lst[2])
             pob = float(lst[8])
-            if pob > 0.001:
+            if pob > 0.00001:
                 key = (psi_phi, pob)
                 rot_list = [float(lst[9]), float(lst[10])]
                 HIS_lib_dic[key] = rot_list
@@ -275,7 +276,7 @@ def SER_backbone_dic():
         try:
             psi_phi = (lst[1] + "_" + lst[2])
             pob = float(lst[8])
-            if pob > 0.05:
+            if pob > 0.001:
                 key = (psi_phi, pob)
                 rot_list = [float(lst[9])]
                 SER_lib_dic[key] = rot_list
@@ -323,7 +324,7 @@ def mut(position, mut_AA):
 
 def SER_HIS_GLU_pair(pSER, pHIS, pGLU, k):
     try:
-        n = 1
+        n = 0
         SER_HIS_GLU_dict = {}
         SHE_dict = {}
         sSER = mut(pSER, "SER")
@@ -331,8 +332,12 @@ def SER_HIS_GLU_pair(pSER, pHIS, pGLU, k):
         sGLU = mut(pGLU, "GLU")
         # get atoms
         ser_ca = res_dict[pSER]["CA"]
+        # print(ser_ca.get_coord().tolist())
         his_ca = res_dict[pHIS]["CA"]
         glu_ca = res_dict[pGLU]["CA"]
+        ser_cb = res_dict[pSER]["CB"]
+        his_cb = res_dict[pHIS]["CB"]
+        glu_cb = res_dict[pGLU]["CB"]
         for pobhis in sHIS:
             his = sHIS[pobhis]
             ne2 = his['ne2'][1]
@@ -352,7 +357,7 @@ def SER_HIS_GLU_pair(pSER, pHIS, pGLU, k):
                     cb_v = cb.get_vector()
                     og_ne2 = og - ne2
                     if abs(1 - og_ne2 / 2.8) < k:
-                        #print(type(og_ne2))
+                        # print(type(og_ne2))
                         ne2_og_cb = calc_angle(ne2_v, og_v, cb_v)
                         if abs(1 - 57.3 * ne2_og_cb / 90) < k:
                             ce1_ne2_og = calc_angle(ce1_v, ne2_v, og_v)
@@ -383,35 +388,59 @@ def SER_HIS_GLU_pair(pSER, pHIS, pGLU, k):
                                                         # print(oe1_nd1_ce1_ne2)
                                                         if 1 - abs(57.3 * oe1_nd1_ce1_ne2 / 140) < k:
                                                             # print(57.3*oe1_nd1_ce1_ne2)
+
                                                             oe2 = glu['oe2'][1]
                                                             oe2_nd1 = abs(oe2 - nd1)
                                                             if oe2_nd1 > oe1_nd1:
+                                                                # print("yes")
+
                                                                 n = n + 1
-                                                                SHE_dict[pSER] = [
-                                                                    ['ATOM', 1, 'OG', 'SER', "A", str(pSER)] +
-                                                                    ser['og'][0].tolist()]
 
-                                                                SHE_dict[pHIS] = [
-                                                                    ['ATOM', 1, 'CG', 'HIS', "A", str(pHIS)] +
-                                                                    his['cg'][0].tolist(),
-                                                                    ['ATOM', 1, 'ND1', 'HIS', "A", str(pHIS)] +
-                                                                    his['nd1'][0].tolist(),
-                                                                    ['ATOM', 1, 'CD2', 'HIS', "A", str(pHIS)] +
-                                                                    his['cd2'][0].tolist(),
-                                                                    ['ATOM', 1, 'CE1', 'HIS', "A", str(pHIS)] +
-                                                                    his['ce1'][0].tolist(),
-                                                                    ['ATOM', 1, 'NE2', 'HIS', "A", str(pHIS)] +
-                                                                    his['ne2'][0].tolist()]
+                                                                SHE_dict[pSER] = [['ATOM', 1, 'CA', 'SER', "A", str(
+                                                                    pSER)] + ser_ca.get_coord().tolist(),
+                                                                                  ['ATOM', 1, 'CB', 'SER', "A", str(
+                                                                                      pSER)] + ser_cb.get_coord().tolist(),
+                                                                                  ['ATOM', 1, 'OG', 'SER', "A",
+                                                                                   str(pSER)] +
+                                                                                  ser['og'][0].tolist()]
 
-                                                                SHE_dict[pGLU] = [
-                                                                    ['ATOM', 1, 'CG', 'GLU', "A", str(pGLU)] +
-                                                                    glu['cg'][0].tolist(),
-                                                                    ['ATOM', 1, 'CD', 'GLU', "A", str(pGLU)] +
-                                                                    glu['cd'][0].tolist(),
-                                                                    ['ATOM', 1, 'OE1', 'GLU', "A", str(pGLU)] +
-                                                                    glu['oe1'][0].tolist(),
-                                                                    ['ATOM', 1, 'OE2', 'GLU', "A", str(pGLU)] +
-                                                                    glu['oe2'][0].tolist()]
+                                                                SHE_dict[pHIS] = [['ATOM', 1, 'CA', 'HIS', "A", str(
+                                                                    pHIS)] + his_ca.get_coord().tolist(),
+                                                                                  ['ATOM', 1, 'CB', 'HIS', "A", str(
+                                                                                      pHIS)] + his_cb.get_coord().tolist(),
+                                                                                  ['ATOM', 1, 'CG', 'HIS', "A",
+                                                                                   str(pHIS)] +
+                                                                                  his['cg'][0].tolist(),
+                                                                                  ['ATOM', 1, 'ND1', 'HIS', "A",
+                                                                                   str(pHIS)] +
+                                                                                  his['nd1'][0].tolist(),
+                                                                                  ['ATOM', 1, 'CD2', 'HIS', "A",
+                                                                                   str(pHIS)] +
+                                                                                  his['cd2'][0].tolist(),
+                                                                                  ['ATOM', 1, 'CE1', 'HIS', "A",
+                                                                                   str(pHIS)] +
+                                                                                  his['ce1'][0].tolist(),
+                                                                                  ['ATOM', 1, 'NE2', 'HIS', "A",
+                                                                                   str(pHIS)] +
+                                                                                  his['ne2'][0].tolist()]
+
+                                                                SHE_dict[pGLU] = [['ATOM', 1, 'CA', 'GLU', "A", str(
+                                                                    pGLU)] + glu_ca.get_coord().tolist(),
+                                                                                  ['ATOM', 1, 'CB', 'GLU', "A", str(
+                                                                                      pGLU)] + glu_cb.get_coord().tolist(),
+                                                                                  ['ATOM', 1, 'CG', 'GLU', "A",
+                                                                                   str(pGLU)] +
+                                                                                  glu['cg'][0].tolist(),
+                                                                                  ['ATOM', 1, 'CD', 'GLU', "A",
+                                                                                   str(pGLU)] +
+                                                                                  glu['cd'][0].tolist(),
+                                                                                  ['ATOM', 1, 'OE1', 'GLU', "A",
+                                                                                   str(pGLU)] +
+                                                                                  glu['oe1'][0].tolist(),
+                                                                                  ['ATOM', 1, 'OE2', 'GLU', "A",
+                                                                                   str(pGLU)] +
+                                                                                  glu['oe2'][0].tolist()]
+                                                                '''
                                                                 ifile = open(pdb_filename)
                                                                 # print(SHE_dict)
                                                                 # for x in SHE_dict.keys():
@@ -457,11 +486,24 @@ def SER_HIS_GLU_pair(pSER, pHIS, pGLU, k):
                                                                         else:
                                                                             print(_lst2pdb(ol, s), file=ofile)
                                                                             s = s + 1
-
-
-                                                                ser_out_name = "SER" + "_" + str(pSER)
-                                                                his_out_name = "HIS" + "_" + str(pHIS)
-                                                                glu_out_name = "GLU" + "_" + str(pGLU)
+                                                                '''
+                                                                ser_out_name = "_SER" + "_" + str(pSER)
+                                                                his_out_name = "_HIS" + "_" + str(pHIS)
+                                                                glu_out_name = "_GLU" + "_" + str(pGLU)
+                                                                ofilename = pdb_filename + ser_out_name + his_out_name + glu_out_name + "_" + str(
+                                                                    n) + ".pdb"
+                                                                outfile = open(ofilename, "w+")
+                                                                outfile = open(ofilename, "a+")
+                                                                pdb = open(pdb_filename)
+                                                                for line in pdb:
+                                                                    if line.startswith("ATOM"):
+                                                                        print(line.replace("\n", ""), file=outfile)
+                                                                print("END", file=outfile)
+                                                                for x in SHE_dict:
+                                                                    for y in SHE_dict[x]:
+                                                                        print(_lst2pdb(y, 1), file=outfile)
+                                                                    print("END", file=outfile)
+                                                                # print("cat "+pdb_filename+" "+ofilename+" > "+pdb_filename.replace(".pdb",ofilename)+".pdb")
 
                                                                 SER_HIS_GLU_dict[
                                                                     ser_out_name + "_" + his_out_name + "_" + glu_out_name] = n
@@ -474,8 +516,6 @@ def SER_HIS_GLU_pair(pSER, pHIS, pGLU, k):
     return SER_HIS_GLU_dict
 
 
-
-
 if len(sys.argv) < 2:
     print("Error, not enough arguments!\nUsage:python3 SHE.py you_pdbfile\n\n\ne.g.: python3 SHE.py 3wzl.pdb\n\n"
           "Before the first trail, you may like to run python3 SHE.py demo, this is fast and can let you know what "
@@ -483,7 +523,7 @@ if len(sys.argv) < 2:
 try:
     if sys.argv[1] == "demo":
         # input
-        pdb_filename = "3wzl_A.pdb"
+        pdb_filename = "3wzl.pdb"
         p = PDBParser(PERMISSIVE=True, QUIET=True)
         s = p.get_structure("X", pdb_filename)
         model = s[0]
@@ -504,7 +544,6 @@ try:
 
         phi_psi_dic = _phi_psi_dic(model, pdb_filename)
 
-
         SER_lib_dic = SER_backbone_dic()
         HIS_lib_dic = HIS_backbone_dic()
         GLU_lib_dic = GLU_backbone_dic()
@@ -513,9 +552,9 @@ try:
         min = 4
         max = 12
 
-        fulllst = [[102,242,126]]
+        fulllst = [[102, 126, 242]]
         pbar = tqdm(6)
-        #print(len(fulllst))
+        # print(len(fulllst))
         for xlst in fulllst:
 
             ofile = open(pdb_filename + "_SHE.out", "a+")
@@ -523,43 +562,42 @@ try:
             pbar.update(1)
             if od != {}:
                 for key in od:
-                    print(key,od[key])
+                    print(key, od[key])
 
             od = SER_HIS_GLU_pair(xlst[0], xlst[2], xlst[1], k)
             pbar.update(1)
             if od != {}:
                 for key in od:
-                    print(key,od[key])
+                    print(key, od[key])
 
             od = SER_HIS_GLU_pair(xlst[1], xlst[0], xlst[2], k)
             pbar.update(1)
             if od != {}:
                 for key in od:
-                    print(key,od[key])
+                    print(key, od[key])
 
             od = SER_HIS_GLU_pair(xlst[1], xlst[2], xlst[0], k)
             pbar.update(1)
             if od != {}:
                 for key in od:
-                    print(key,od[key])
+                    print(key, od[key])
 
             od = SER_HIS_GLU_pair(xlst[2], xlst[1], xlst[0], k)
             pbar.update(1)
             if od != {}:
                 for key in od:
-                    print(key,od[key])
+                    print(key, od[key])
 
             od = SER_HIS_GLU_pair(xlst[2], xlst[0], xlst[1], k)
             pbar.update(1)
             if od != {}:
                 for key in od:
-                    print(key,od[key])
+                    print(key, od[key])
 
         pbar.close()
 
         end = time.time()
         print("This job took " + str(end - start) + " seconds!")
-
 
     if sys.argv[1] != "demo" and sys.argv[2] != "mt" and sys.argv[2] != "nt":
         pdb_filename = sys.argv[1]
@@ -584,7 +622,6 @@ try:
 
         phi_psi_dic = _phi_psi_dic(model, pdb_filename)
 
-
         SER_lib_dic = SER_backbone_dic()
         HIS_lib_dic = HIS_backbone_dic()
         GLU_lib_dic = GLU_backbone_dic()
@@ -592,44 +629,42 @@ try:
         k = 0.25
         min = 4
         max = 12
-        fulllst = _pair_map(atom_dict,min,max)
+        fulllst = _pair_map(atom_dict, min, max)
         pbar = tqdm(len(fulllst))
-        #print(len(fulllst))
+        # print(len(fulllst))
         for xlst in fulllst:
             pbar.update(1)
             ofile = open(pdb_filename + "_SHE.out", "a+")
             od = SER_HIS_GLU_pair(xlst[0], xlst[1], xlst[2], k)
             if od != {}:
                 for key in od:
-                    print(key,od[key],file=ofile)
+                    print(key, od[key], file=ofile)
             od = SER_HIS_GLU_pair(xlst[0], xlst[2], xlst[1], k)
             if od != {}:
                 for key in od:
-                    print(key,od[key],file=ofile)
+                    print(key, od[key], file=ofile)
             od = SER_HIS_GLU_pair(xlst[1], xlst[0], xlst[2], k)
             if od != {}:
                 for key in od:
-                    print(key,od[key],file=ofile)
+                    print(key, od[key], file=ofile)
             od = SER_HIS_GLU_pair(xlst[1], xlst[2], xlst[0], k)
             if od != {}:
                 for key in od:
-                    print(key,od[key],file=ofile)
+                    print(key, od[key], file=ofile)
             od = SER_HIS_GLU_pair(xlst[2], xlst[1], xlst[0], k)
             if od != {}:
                 for key in od:
-                    print(key,od[key],file=ofile)
+                    print(key, od[key], file=ofile)
             od = SER_HIS_GLU_pair(xlst[2], xlst[0], xlst[1], k)
             if od != {}:
                 for key in od:
-                    print(key,od[key],file=ofile)
+                    print(key, od[key], file=ofile)
         pbar.close()
-
 
         end = time.time()
         print("This job took " + str(end - start) + " seconds!")
 
-
-    if sys.argv[2] == "nt":
+    if sys.argv[1] != "demo" and sys.argv[2] == "nt":
         print("yes")
         pdb_filename = sys.argv[1]
         p = PDBParser(PERMISSIVE=True, QUIET=True)
@@ -652,7 +687,6 @@ try:
 
         phi_psi_dic = _phi_psi_dic(model, pdb_filename)
 
-
         SER_lib_dic = SER_backbone_dic()
         HIS_lib_dic = HIS_backbone_dic()
         GLU_lib_dic = GLU_backbone_dic()
@@ -660,31 +694,29 @@ try:
         k = 0.25
         min = 4
         max = 12
-        fulllst = _pair_map(atom_dict,min,max)
+        fulllst = _pair_map(atom_dict, min, max)
         pbar = tqdm(len(fulllst))
-        #print(len(fulllst))
+        # print(len(fulllst))
         for xlst in fulllst:
             pbar.update(1)
             ofile = open(pdb_filename + "_SHE.out", "a+")
             p3 = str(xlst[2])
             p1 = str(xlst[0])
             p2 = str(xlst[1])
-            os.system("nohup python3.6 SHE_v3_1.py "+pdb_filename+" mt "+p1+" "+p2+" "+p3+" &")
-            os.system("nohup python3.6 SHE_v3_1.py "+pdb_filename+" mt "+p1+" "+p3+" "+p2+" &")
-            os.system("nohup python3.6 SHE_v3_1.py "+pdb_filename+" mt "+p3+" "+p1+" "+p2+" &")
-            os.system("nohup python3.6 SHE_v3_1.py "+pdb_filename+" mt "+p3+" "+p2+" "+p1+" &")
-            os.system("nohup python3.6 SHE_v3_1.py "+pdb_filename+" mt "+p2+" "+p1+" "+p3+" &")
-            os.system("nohup python3.6 SHE_v3_1.py "+pdb_filename+" mt "+p2+" "+p3+" "+p1+" &")
+            os.system("nohup python3.6 SHE_v3_1.py " + pdb_filename + " mt " + p1 + " " + p2 + " " + p3 + " &")
+            os.system("nohup python3.6 SHE_v3_1.py " + pdb_filename + " mt " + p1 + " " + p3 + " " + p2 + " &")
+            os.system("nohup python3.6 SHE_v3_1.py " + pdb_filename + " mt " + p3 + " " + p1 + " " + p2 + " &")
+            os.system("nohup python3.6 SHE_v3_1.py " + pdb_filename + " mt " + p3 + " " + p2 + " " + p1 + " &")
+            os.system("nohup python3.6 SHE_v3_1.py " + pdb_filename + " mt " + p2 + " " + p1 + " " + p3 + " &")
+            os.system("nohup python3.6 SHE_v3_1.py " + pdb_filename + " mt " + p2 + " " + p3 + " " + p1 + " &")
             time.sleep(0.1)
 
         pbar.close()
 
-
         end = time.time()
         print("This job took " + str(end - start) + " seconds!")
 
-
-    if sys.argv[2] == "mt" and sys.argv[3] != "":
+    if sys.argv[1] != "demo" and sys.argv[2] == "mt" and sys.argv[3] != "":
         pdb_filename = sys.argv[1]
         p = PDBParser(PERMISSIVE=True, QUIET=True)
         s = p.get_structure("X", pdb_filename)
@@ -706,7 +738,6 @@ try:
 
         phi_psi_dic = _phi_psi_dic(model, pdb_filename)
 
-
         SER_lib_dic = SER_backbone_dic()
         HIS_lib_dic = HIS_backbone_dic()
         GLU_lib_dic = GLU_backbone_dic()
@@ -714,16 +745,14 @@ try:
         k = 0.25
         min = 4
         max = 12
-        lst = [int(sys.argv[3]),int(sys.argv[4]),int(sys.argv[5])]
+        lst = [int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5])]
 
         ofile = open(pdb_filename + "_SHE.out", "a+")
 
         od = SER_HIS_GLU_pair(lst[2], lst[0], lst[1], k)
         if od != {}:
             for key in od:
-                print(key,od[key],file=ofile)
-
-
+                print(key, od[key], file=ofile)
 
         end = time.time()
         print("This job took " + str(end - start) + " seconds!")
