@@ -1,10 +1,12 @@
 import itertools
 import math
 import sys
+import os
 import time
 from Bio.PDB import *
 from Bio.PDB.Atom import *
 from Bio.PDB.DSSP import DSSP
+from tqdm import tqdm
 
 start = time.time()
 
@@ -384,6 +386,7 @@ def SER_HIS_GLU_pair(pSER, pHIS, pGLU, k):
                                                             oe2 = glu['oe2'][1]
                                                             oe2_nd1 = abs(oe2 - nd1)
                                                             if oe2_nd1 > oe1_nd1:
+                                                                n = n + 1
                                                                 SHE_dict[pSER] = [
                                                                     ['ATOM', 1, 'OG', 'SER', "A", str(pSER)] +
                                                                     ser['og'][0].tolist()]
@@ -455,7 +458,7 @@ def SER_HIS_GLU_pair(pSER, pHIS, pGLU, k):
                                                                             print(_lst2pdb(ol, s), file=ofile)
                                                                             s = s + 1
 
-                                                                n = n + 1
+
                                                                 ser_out_name = "SER" + "_" + str(pSER)
                                                                 his_out_name = "HIS" + "_" + str(pHIS)
                                                                 glu_out_name = "GLU" + "_" + str(pGLU)
@@ -507,15 +510,60 @@ try:
         GLU_lib_dic = GLU_backbone_dic()
 
         k = 0.25
+        min = 4
+        max = 12
 
-        print(SER_HIS_GLU_pair(102, 242, 126, k))
+        fulllst = [[102,242,126]]
+        pbar = tqdm(6)
+        #print(len(fulllst))
+        for xlst in fulllst:
+
+            ofile = open(pdb_filename + "_SHE.out", "a+")
+            od = SER_HIS_GLU_pair(xlst[0], xlst[1], xlst[2], k)
+            pbar.update(1)
+            if od != {}:
+                for key in od:
+                    print(key,od[key])
+
+            od = SER_HIS_GLU_pair(xlst[0], xlst[2], xlst[1], k)
+            pbar.update(1)
+            if od != {}:
+                for key in od:
+                    print(key,od[key])
+
+            od = SER_HIS_GLU_pair(xlst[1], xlst[0], xlst[2], k)
+            pbar.update(1)
+            if od != {}:
+                for key in od:
+                    print(key,od[key])
+
+            od = SER_HIS_GLU_pair(xlst[1], xlst[2], xlst[0], k)
+            pbar.update(1)
+            if od != {}:
+                for key in od:
+                    print(key,od[key])
+
+            od = SER_HIS_GLU_pair(xlst[2], xlst[1], xlst[0], k)
+            pbar.update(1)
+            if od != {}:
+                for key in od:
+                    print(key,od[key])
+
+            od = SER_HIS_GLU_pair(xlst[2], xlst[0], xlst[1], k)
+            pbar.update(1)
+            if od != {}:
+                for key in od:
+                    print(key,od[key])
+
+        pbar.close()
+
         end = time.time()
         print("This job took " + str(end - start) + " seconds!")
 
 
-    if sys.argv[1] != "demo":
+    if sys.argv[1] != "demo" and sys.argv[2] != "mt" and sys.argv[2] != "nt":
         pdb_filename = sys.argv[1]
-        pdb_filename = "3wzl_A.pdb"
+
         p = PDBParser(PERMISSIVE=True, QUIET=True)
         s = p.get_structure("X", pdb_filename)
         model = s[0]
@@ -545,16 +593,137 @@ try:
         min = 4
         max = 12
         fulllst = _pair_map(atom_dict,min,max)
-
+        pbar = tqdm(len(fulllst))
+        #print(len(fulllst))
         for xlst in fulllst:
+            pbar.update(1)
             ofile = open(pdb_filename + "_SHE.out", "a+")
             od = SER_HIS_GLU_pair(xlst[0], xlst[1], xlst[2], k)
             if od != {}:
                 for key in od:
                     print(key,od[key],file=ofile)
+            od = SER_HIS_GLU_pair(xlst[0], xlst[2], xlst[1], k)
+            if od != {}:
+                for key in od:
+                    print(key,od[key],file=ofile)
+            od = SER_HIS_GLU_pair(xlst[1], xlst[0], xlst[2], k)
+            if od != {}:
+                for key in od:
+                    print(key,od[key],file=ofile)
+            od = SER_HIS_GLU_pair(xlst[1], xlst[2], xlst[0], k)
+            if od != {}:
+                for key in od:
+                    print(key,od[key],file=ofile)
+            od = SER_HIS_GLU_pair(xlst[2], xlst[1], xlst[0], k)
+            if od != {}:
+                for key in od:
+                    print(key,od[key],file=ofile)
+            od = SER_HIS_GLU_pair(xlst[2], xlst[0], xlst[1], k)
+            if od != {}:
+                for key in od:
+                    print(key,od[key],file=ofile)
+        pbar.close()
 
-                #print(od.keys())
-                #print(SER_HIS_GLU_pair(xlst[0], xlst[1], xlst[2], k),file=ofile)
+
+        end = time.time()
+        print("This job took " + str(end - start) + " seconds!")
+
+
+    if sys.argv[2] == "nt":
+        print("yes")
+        pdb_filename = sys.argv[1]
+        p = PDBParser(PERMISSIVE=True, QUIET=True)
+        s = p.get_structure("X", pdb_filename)
+        model = s[0]
+        chain = model["A"]
+        residues = model.get_residues()
+        atom_dict = {}
+        res_dict = {}
+        n = 1
+        for residue in residues:
+            if is_aa(residue):
+                try:
+                    cb = residue['CB']
+                    atom_dict[n] = cb
+                    res_dict[n] = residue
+                    n = n + 1
+                except KeyError:
+                    n = n + 1
+
+        phi_psi_dic = _phi_psi_dic(model, pdb_filename)
+
+
+        SER_lib_dic = SER_backbone_dic()
+        HIS_lib_dic = HIS_backbone_dic()
+        GLU_lib_dic = GLU_backbone_dic()
+
+        k = 0.25
+        min = 4
+        max = 12
+        fulllst = _pair_map(atom_dict,min,max)
+        pbar = tqdm(len(fulllst))
+        #print(len(fulllst))
+        for xlst in fulllst:
+            pbar.update(1)
+            ofile = open(pdb_filename + "_SHE.out", "a+")
+            p3 = str(xlst[2])
+            p1 = str(xlst[0])
+            p2 = str(xlst[1])
+            os.system("nohup python3.6 SHE_v3_1.py "+pdb_filename+" mt "+p1+" "+p2+" "+p3+" &")
+            os.system("nohup python3.6 SHE_v3_1.py "+pdb_filename+" mt "+p1+" "+p3+" "+p2+" &")
+            os.system("nohup python3.6 SHE_v3_1.py "+pdb_filename+" mt "+p3+" "+p1+" "+p2+" &")
+            os.system("nohup python3.6 SHE_v3_1.py "+pdb_filename+" mt "+p3+" "+p2+" "+p1+" &")
+            os.system("nohup python3.6 SHE_v3_1.py "+pdb_filename+" mt "+p2+" "+p1+" "+p3+" &")
+            os.system("nohup python3.6 SHE_v3_1.py "+pdb_filename+" mt "+p2+" "+p3+" "+p1+" &")
+            time.sleep(0.1)
+
+        pbar.close()
+
+
+        end = time.time()
+        print("This job took " + str(end - start) + " seconds!")
+
+
+    if sys.argv[2] == "mt" and sys.argv[3] != "":
+        pdb_filename = sys.argv[1]
+        p = PDBParser(PERMISSIVE=True, QUIET=True)
+        s = p.get_structure("X", pdb_filename)
+        model = s[0]
+        chain = model["A"]
+        residues = model.get_residues()
+        atom_dict = {}
+        res_dict = {}
+        n = 1
+        for residue in residues:
+            if is_aa(residue):
+                try:
+                    cb = residue['CB']
+                    atom_dict[n] = cb
+                    res_dict[n] = residue
+                    n = n + 1
+                except KeyError:
+                    n = n + 1
+
+        phi_psi_dic = _phi_psi_dic(model, pdb_filename)
+
+
+        SER_lib_dic = SER_backbone_dic()
+        HIS_lib_dic = HIS_backbone_dic()
+        GLU_lib_dic = GLU_backbone_dic()
+
+        k = 0.25
+        min = 4
+        max = 12
+        lst = [int(sys.argv[3]),int(sys.argv[4]),int(sys.argv[5])]
+
+        ofile = open(pdb_filename + "_SHE.out", "a+")
+
+        od = SER_HIS_GLU_pair(lst[2], lst[0], lst[1], k)
+        if od != {}:
+            for key in od:
+                print(key,od[key],file=ofile)
+
+
 
         end = time.time()
         print("This job took " + str(end - start) + " seconds!")
